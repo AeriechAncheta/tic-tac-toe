@@ -4,13 +4,18 @@ import { Button, Dialog, DialogContent, Grid, Typography } from "@mui/material";
 
 function App() {
   const [xIsNext, setXIsNext] = useState(true);
-  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [winner, setWinner] = useState(null);
+  const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
+  const [stepNumber, setStepNumber] = useState(0);
+  const [line, setLine] = useState(null);
   const [status, setStatus] = useState("Next player: X");
-  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
-    showResult()
-  }, [squares]);
+    showResult();
+  }, [history[stepNumber].squares]);
+
+  const current = history[stepNumber];
+  const squares = current.squares.slice();
 
   const getImages = (arrayValue, arrayIndex) => {
     const imageStyle = {
@@ -19,7 +24,27 @@ function App() {
       width: "100%",
     };
 
-    if (arrayValue === "X") {
+    if (
+      line != null &&
+      winner ==
+        "X" && (
+          line[0] == arrayIndex ||
+            line[1] == arrayIndex ||
+            line[2] == arrayIndex
+        )
+    ) {
+      return <img src="images/X-Winner-Image.png" alt="X" style={imageStyle} />;
+    } else if (
+      line != null &&
+      winner ==
+        "O" && (
+          line[0] == arrayIndex ||
+            line[1] == arrayIndex ||
+            line[2] == arrayIndex
+        )
+    ) {
+      return <img src="images/O-Winner-Image.png" alt="X" style={imageStyle} />;
+    } else if (arrayValue === "X") {
       return <img src="images/X-Image.png" alt="X" style={imageStyle} />;
     } else if (arrayValue === "O") {
       return <img src="images/O-Image.png" alt="O" style={imageStyle} />;
@@ -36,19 +61,16 @@ function App() {
   };
 
   const handleSquareClick = (arrayIndex) => {
-    if (squares[arrayIndex] || calculateWinner(squares)) {
-      setOpenDialog(true)
+    if (calculateWinner(squares) || squares[arrayIndex]) {
       return;
     }
 
-    const updatedArray = [...squares];
-    if (xIsNext) {
-      updatedArray[arrayIndex] = "X";
-    } else {
-      updatedArray[arrayIndex] = "O";
-    }
-    setXIsNext(!xIsNext)
-    setSquares(updatedArray);
+    const newSquares = squares.slice();
+    newSquares[arrayIndex] = xIsNext ? "X" : "O";
+
+    setHistory(history.concat([{ squares: newSquares }]));
+    setStepNumber(history.length);
+    setXIsNext(!xIsNext);
   };
 
   const calculateWinner = (squares) => {
@@ -60,47 +82,59 @@ function App() {
       [1, 4, 7],
       [2, 5, 8],
       [0, 4, 8],
-      [2, 4, 6]
+      [2, 4, 6],
     ];
     for (let index = 0; index < lines.length; index++) {
       const [a, b, c] = lines[index];
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      if (
+        squares[a] &&
+        squares[a] === squares[b] &&
+        squares[a] === squares[c]
+      ) {
+        setLine(lines[index]);
+        setWinner(squares[a]);
         return squares[a];
       }
     }
+    setLine(null);
+    setWinner(null);
     return null;
-  }
+  };
 
   const showResult = () => {
     const winner = calculateWinner(squares);
-  if (winner) {
-    setOpenDialog(true)
-    setStatus('Winner: ' + winner)
-  } else {
-    setStatus('Next player: ' + (xIsNext ? 'X' : 'O'))
-  }
+    if (winner) {
+      setStatus("Winner: " + winner);
+    } else {
+      setStatus("Next player: " + (xIsNext ? "X" : "O"));
+    }
 
-  let isDraw = true;
-for (const square of squares) {
-  if (square === null) {
-    isDraw = false;
-    break;
-  }
-}
+    let isDraw = true;
+    for (const square of squares) {
+      if (square === null) {
+        isDraw = false;
+        break;
+      }
+    }
 
-if (isDraw) {
-  setOpenDialog(true)
-  setStatus("Draw");
-}
+    if (isDraw) {
+      setStatus("Draw");
+    }
+  };
 
-    
-  }
+  const jumpTo = (step) => {
+    setStepNumber(step);
+    setXIsNext(step % 2 === 0);
+  };
 
-  const resetGame = () => {
-    setSquares(Array(9).fill(null))
-    setXIsNext(true)
-    setOpenDialog(false)
-  }
+  const moves = history.map((step, move) => {
+    const desc = move ? `Go to move #${move}` : "Go to game start";
+    return (
+      <li key={move}>
+        <Button onClick={() => jumpTo(move)}>{desc}</Button>
+      </li>
+    );
+  });
 
   return (
     <>
@@ -115,17 +149,10 @@ if (isDraw) {
           </Grid>
         </Grid>
         <Grid item xs={12} md={6}>
-        <Typography>{status}</Typography>
+          <Typography>{status}</Typography>
+          <ol>{moves}</ol>
         </Grid>
       </Grid>
-      <Dialog
-        open={openDialog}
-      >
-        <DialogContent>
-        <Typography>{status}</Typography>
-          <Button onClick={(event) => resetGame()}>Play Again</Button>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

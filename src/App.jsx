@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import {
   AppBar,
@@ -6,11 +6,66 @@ import {
   Button,
   Container,
   Grid,
-  Toolbar,
   Typography,
 } from "@mui/material";
 import { center } from "./style";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+
+const StyledSquare = ({ arrayValue, arrayIndex, line, winner, handleSquareClick }) => {
+  const imageStyle = {
+    border: "2px solid black",
+    height: "130px",
+    width: "100%",
+  };
+
+  if (
+    line != null &&
+    ((winner === "X" || winner === "O") &&
+      (line[0] === arrayIndex ||
+        line[1] === arrayIndex ||
+        line[2] === arrayIndex))
+  ) {
+    const winnerImage = winner === "X" ? "X-Winner-Image.png" : "O-Winner-Image.png";
+    return <img src={`images/${winnerImage}`} alt={winner} style={imageStyle} />;
+  } else if (arrayValue === "X" || arrayValue === "O") {
+    return <img src={`images/${arrayValue}-Image.png`} alt={arrayValue} style={imageStyle} />;
+  } else {
+    return (
+      <img
+        src="images/White-Image-Background.jpeg"
+        alt=" "
+        style={imageStyle}
+        onClick={() => handleSquareClick(arrayIndex)}
+      />
+    );
+  }
+};
+
+const MovesList = ({ history, handleSetStep }) => {
+  return (
+    <Box p={2} height="100%" display="flex" flexDirection="column" justifyContent="center">
+      <Typography variant="h6" mb={2}>
+        Move History
+      </Typography>
+      <Box overflow="auto" maxHeight="60vh">
+        <ol style={{ listStyleType: "decimal", paddingLeft: "20px" }}>
+          {history.map((step, move) => (
+            <li key={move}>
+              <Button
+                onClick={() => handleSetStep(move)}
+                variant="outlined"
+                size="small"
+                fullWidth
+              >
+                {move ? `Go to move #${move}` : "Go to game start"}
+              </Button>
+            </li>
+          ))}
+        </ol>
+      </Box>
+    </Box>
+  );
+};
 
 function App() {
   const [xIsNext, setXIsNext] = useState(true);
@@ -26,47 +81,6 @@ function App() {
     handleSetGameStatus();
   }, [history[stepNumber].squares]);
 
-  //Function to show specific image in each square
-  const showSquareImages = (arrayValue, arrayIndex) => {
-    const imageStyle = {
-      border: "2px solid black",
-      height: "130px",
-      width: "100%",
-    };
-
-    if (
-      line != null &&
-      winner === "X" &&
-      (line[0] === arrayIndex ||
-        line[1] === arrayIndex ||
-        line[2] === arrayIndex)
-    ) {
-      return <img src="images/X-Winner-Image.png" alt="X" style={imageStyle} />;
-    } else if (
-      line != null &&
-      winner === "O" &&
-      (line[0] === arrayIndex ||
-        line[1] === arrayIndex ||
-        line[2] === arrayIndex)
-    ) {
-      return <img src="images/O-Winner-Image.png" alt="X" style={imageStyle} />;
-    } else if (arrayValue === "X") {
-      return <img src="images/X-Image.png" alt="X" style={imageStyle} />;
-    } else if (arrayValue === "O") {
-      return <img src="images/O-Image.png" alt="O" style={imageStyle} />;
-    } else {
-      return (
-        <img
-          src="images/White Image Background.jpeg"
-          alt=" "
-          style={imageStyle}
-          onClick={() => handleSquareClick(arrayIndex)}
-        />
-      );
-    }
-  };
-
-  //Function to handle what to do when squares are clicked
   const handleSquareClick = (arrayIndex) => {
     if (calculateWinner(squares) || squares[arrayIndex]) {
       return;
@@ -80,7 +94,6 @@ function App() {
     setXIsNext(!xIsNext);
   };
 
-  //Function to calculate all posible lines to win in tic tac toe
   const calculateWinner = (squares) => {
     const lines = [
       [0, 1, 2],
@@ -110,7 +123,6 @@ function App() {
     return null;
   };
 
-  //Function To set what is the game status
   const handleSetGameStatus = () => {
     const winner = calculateWinner(squares);
     if (winner) {
@@ -133,13 +145,11 @@ function App() {
     }
   };
 
-  //Function to set move or step
   const handleSetStep = (step) => {
     setStepNumber(step);
     setXIsNext(step % 2 === 0);
   };
 
-  //Function to reset game from start
   const resetGame = () => {
     setXIsNext(true);
     setWinner(null);
@@ -148,16 +158,6 @@ function App() {
     setLine(null);
     setStatus("Next player: X");
   };
-
-  //Function to show moves that have been done
-  const moves = history.map((step, move) => {
-    const desc = move ? `Go to move #${move}` : "Go to game start";
-    return (
-      <li key={move}>
-        <Button onClick={() => handleSetStep(move)}>{desc}</Button>
-      </li>
-    );
-  });
 
   return (
     <>
@@ -183,31 +183,40 @@ function App() {
           </Typography>
         </Container>
       </AppBar>
+
       <Typography variant="h3" marginTop={1} marginBottom={1} sx={center}>
         {status}
       </Typography>
 
       <Grid container spacing={1}>
-          <Grid item xs={12} md={6}>
-            <Box border={2} borderColor="black">
-              <Grid container spacing={2} padding={2} sx={center}>
-                {squares.map((array, index) => (
-                  <Grid item xs={4} md={4} key={index}>
-                    {showSquareImages(array, index)}
-                  </Grid>
-                ))}
-                <Button
-                  variant="contained"
-                  onClick={(event) => resetGame()}
-                  sx={{ marginLeft: "25px", marginTop: "10px" }}
-                >
-                  Reset Game
-                </Button>
-              </Grid>
-            </Box>
-          </Grid>
         <Grid item xs={12} md={6}>
-          <ol>{moves}</ol>
+          <Box border={2} borderColor="black">
+            <Grid container spacing={2} padding={2} sx={center}>
+              {squares.map((array, index) => (
+                <Grid item xs={4} md={4} key={index}>
+                  <StyledSquare
+                    arrayValue={array}
+                    arrayIndex={index}
+                    line={line}
+                    winner={winner}
+                    handleSquareClick={handleSquareClick}
+                  />
+                </Grid>
+              ))}
+              <Button
+                variant="contained"
+                onClick={(event) => resetGame()}
+                sx={{ marginLeft: "25px", marginTop: "10px" }}
+              >
+                Reset Game
+              </Button>
+            </Grid>
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Box border={2} borderColor="black">
+            <MovesList history={history} handleSetStep={handleSetStep} />
+          </Box>
         </Grid>
       </Grid>
     </>

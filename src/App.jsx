@@ -41,6 +41,7 @@ const StyledSquare = ({ arrayValue, arrayIndex, line, winner, handleSquareClick 
   }
 };
 
+
 const MovesList = ({ history, handleSetStep }) => {
   return (
     <Box p={2} height="100%" display="flex" flexDirection="column" justifyContent="center">

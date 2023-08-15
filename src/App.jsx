@@ -32,7 +32,7 @@ const StyledSquare = ({ arrayValue, arrayIndex, line, winner, handleSquareClick 
   } else {
     return (
       <img
-        src="images/White-Image-Background.jpeg"
+        src="images/White-Image-Background.png"
         alt=" "
         style={imageStyle}
         onClick={() => handleSquareClick(arrayIndex)}
